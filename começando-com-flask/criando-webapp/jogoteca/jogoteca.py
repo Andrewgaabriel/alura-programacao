@@ -1,11 +1,27 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, session, flash, url_for
 
+class Usuario:
+    def __init__(self, nome, nickname, senha):
+        self.nome = nome
+        self.nickname = nickname
+        self.senha = senha
+        
 
 class Jogo:
     def __init__(self, nome, categoria, console):
         self.nome = nome
         self.categoria = categoria
         self.console = console
+        
+        
+
+usuario1 = Usuario('Rafael', 'rafael', '123')
+usuario2 = Usuario('Andrew', 'andrew', '1910')
+usuario3 = Usuario('João', 'joao', '1111')
+
+usuarios =  {   usuario1.nickname: usuario1,
+                usuario2.nickname: usuario2,
+                usuario3.nickname: usuario3 }
 
 
 jogo1 = Jogo('Tetris', 'Puzzle', 'Atari')
@@ -16,6 +32,8 @@ jogosLista = [jogo1, jogo2, jogo3]
 
 app = Flask(__name__)
 
+app.secret_key = 'alura'
+
 
 
 @app.route('/')
@@ -24,7 +42,10 @@ def index():
 
 
 @app.route('/novo')
-def novo():    
+def novo():
+    if 'usuario_logado' not in session or session['usuario_logado'] == None:
+        return redirect(url_for('login', proxima=url_for('novo')))
+    
     return render_template('novo.html', titulo='Novo Jogo')
 
 
@@ -36,8 +57,36 @@ def criar():
     jogo = Jogo(nome, categoria, console)
     jogosLista.append(jogo)
     
-    return redirect('/')
+    return redirect(url_for('index'))
 
+
+@app.route('/login')
+def login():
+    proxima = request.args.get('proxima')
+    return render_template('login.html', proxima=proxima)
+
+
+
+@app.route('/autenticar', methods=['POST',])
+def autenticar():
+    
+    if request.form['usuario'] in usuarios:
+        usuario = usuarios[request.form['usuario']]
+        if request.form['senha'] == usuario.senha:
+            session['usuario_logado'] = usuario.nickname
+            flash(usuario.nickname + ' logado com sucesso!')
+            proxima_pagina = request.form['proximo']
+            return redirect(proxima_pagina)
+    else:
+        flash('Não logado. Tente novamente!')
+        return redirect(url_for('login'))
+
+
+@app.route('/logout')
+def logout():
+    session['usuario_logado'] = None
+    flash('Usuário deslogado com sucesso!')
+    return redirect(url_for('index'))
 
 
 app.run(host='0.0.0.0', port=8080, debug=True) 
