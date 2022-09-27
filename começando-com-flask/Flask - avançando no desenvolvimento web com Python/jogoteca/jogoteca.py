@@ -51,7 +51,7 @@ def novo():
     return render_template('novo.html', titulo='Novo Jogo')
 
 
-@app.route('/criar', methods=['POST',])
+@app.route('/criar', methods=['POST','GET'])
 def criar():
     nome = request.form['nome']
     categoria = request.form['categoria']
@@ -78,7 +78,7 @@ def login():
 
 
 
-@app.route('/autenticar', methods=['POST',])
+@app.route('/autenticar', methods=['POST','GET'])
 def autenticar():
     
     usuario = Usuarios.query.filter_by(nickname=request.form['usuario']).first()
